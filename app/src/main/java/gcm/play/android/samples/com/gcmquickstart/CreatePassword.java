@@ -144,7 +144,7 @@ public class CreatePassword extends AppCompatActivity {
 
         RequestQueue queue = Volley.newRequestQueue(this);
         //String url = "http://suterm.comli.com/regID.php";
-        String url = "http://suterm.eu5.org/registerUser.php";
+        String url = "http://www.entuizer.tech/administrators/suterm/webServices/registerUser.php";
         StringRequest putRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>()
                 {

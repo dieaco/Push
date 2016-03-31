@@ -65,7 +65,10 @@
         </activity>
         <activity
             android:name=".NotificationsList"
-            android:label="@string/hearLeader"></activity>
+            android:label="@string/hearLeader"
+            android:screenOrientation="portrait">
+
+        </activity>
     </application>
 
 </manifest>

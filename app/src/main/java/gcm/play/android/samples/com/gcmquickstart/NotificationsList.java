@@ -4,16 +4,23 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,18 +41,33 @@ import java.util.Map;
 import gcm.play.android.samples.com.gcmquickstart.adapters.CustomList;
 import gcm.play.android.samples.com.gcmquickstart.data.UserData;
 import gcm.play.android.samples.com.gcmquickstart.parsers.ParseJson;
+import gcm.play.android.samples.com.gcmquickstart.views.RoundedImageView;
 
 public class NotificationsList extends AppCompatActivity {
 
-    private static final String JSON_URL = "http://suterm.eu5.org/SendData.php";
     private ImageView btnGet;
     private ListView listView;
     private ProgressDialog progressDialog;
     private TextView tvSlogan;
 
+    private Spinner spinner;
+    private String[] messages_to_show = {"Mostrar 10", "Mostrar 25", "Mostrar 50", "Mostrar 100"};
+
+    String quantity_to_show = "10";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //Transformar drawable a Bitmpap
+        Bitmap sourceBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.sutermsg);
+        //Establecer border redondeado a Bitmap
+        Drawable drawable = new BitmapDrawable(getResources(), RoundedImageView.createCircleBitmap(sourceBitmap));
+        //ActionBar
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowHomeEnabled(true);
+        actionBar.setLogo(drawable);
+        actionBar.setDisplayUseLogoEnabled(true);
+
         setContentView(R.layout.activity_notifications_list);
 
         /* PASO DEL MENSAJE DE LA NOTIFICACIÓN ATRAVES DE BUNDLE PARA MOSTRAR UN TOAST */
@@ -67,31 +89,17 @@ public class NotificationsList extends AppCompatActivity {
         progressDialog.show();
         super.onResume();
         //Carga ListView con los datos de la base
-        sendRequest();
+        sendRequest(quantity_to_show);
         //Animación de slogan
         //tvSlogan.animate().rotationX(720f).setDuration(5000);
     }
 
     //Inicializa todos los elementos de la aplicación
     public void initViews(){
-        //btnGet = (ImageView)findViewById(R.id.btnGet);
+        //Inicialización de ListView
         listView = (ListView)findViewById(R.id.listView);
-        //tvSlogan = (TextView)findViewById(R.id.tvSlogan);
-
         //Iniialización de dialogo de progreso
         progressDialog = new ProgressDialog(this, R.style.MyTheme);
-
-        //Evento click para refrescar listView de noitificaciones
-        /*btnGet.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                progressDialog.setTitle("Aviso");
-                progressDialog.setMessage("Cargando Mensajes...");
-                progressDialog.show();
-                //Actuliza la lista para visualizar nuevas notificaciones
-                sendRequest();
-            }
-        });*/
 
         //Evento click para cada elemento de la lista
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -119,6 +127,42 @@ public class NotificationsList extends AppCompatActivity {
                 return true;
             }
         });
+
+        //Inicialización de Spinner
+        spinner = (Spinner)findViewById(R.id.spinner);
+        spinner.setAdapter(new ArrayAdapter<String>(this, R.layout.textview_spinner, messages_to_show));
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                switch(position){
+                    case 0:
+                        quantity_to_show = "10";
+                        break;
+                    case 1:
+                        quantity_to_show = "25";
+                        break;
+                    case 2:
+                        quantity_to_show = "50";
+                        break;
+                    case 3:
+                        quantity_to_show = "100";
+                        break;
+                }
+
+                progressDialog.setTitle("Aviso");
+                progressDialog.setMessage("Cargando Mensajes...");
+                progressDialog.show();
+
+                sendRequest(quantity_to_show);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                Log.d("SIN SELECCIÓN:", " - No se seleccionó nada en el spinner");
+            }
+        });
     }
 
     //Actualización o inserción en el servidor del status de cada notificación
@@ -129,7 +173,7 @@ public class NotificationsList extends AppCompatActivity {
 
         RequestQueue queue = Volley.newRequestQueue(this);
         //String url = "http://suterm.comli.com/regID.php";
-        String url = "http://suterm.eu5.org/updateMessageStatus.php";
+        String url = "http://www.entuizer.tech/administrators/suterm/webServices/updateMessageStatus.php";
         StringRequest putRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>()
                 {
@@ -195,7 +239,7 @@ public class NotificationsList extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         //Actualización del listado una vez que se presiona el botón Listo
-                        sendRequest();
+                        sendRequest(quantity_to_show);
                     }
                 });
 
@@ -203,10 +247,10 @@ public class NotificationsList extends AppCompatActivity {
     }
 
     //Consulta de Notificaciones a la BD
-    private void sendRequest(){
+    private void sendRequest(final String limit){
         RequestQueue queue = Volley.newRequestQueue(this);
         //String url = "http://suterm.comli.com/regID.php";
-        String url = "http://suterm.eu5.org/getMessages.php";
+        String url = "http://www.entuizer.tech/administrators/suterm/webServices/getMessages.php";
         StringRequest putRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>()
                 {
@@ -235,8 +279,9 @@ public class NotificationsList extends AppCompatActivity {
                 int userId = UserData.getUserId(NotificationsList.this);
 
                 Map<String, String> params = new HashMap<String, String>();
-                Log.d("USERID:"," - "+userId);
+                Log.d("USERID:"," - "+userId+" - LIMIT: "+limit);
                 params.put("userId", "" + userId);
+                params.put("limit", limit);
 
                 return params;
             }
@@ -252,7 +297,7 @@ public class NotificationsList extends AppCompatActivity {
         Toast.makeText(getApplicationContext(),"UserIDLocal: "+userIdLocal,Toast.LENGTH_LONG).show();*/
         ParseJson pj = new ParseJson(json);
         pj.parseJSON();
-        CustomList cl = new CustomList(this, ParseJson.id,ParseJson.mensaje,ParseJson.timestamp, ParseJson.isRead, ParseJson.userId);
+        CustomList cl = new CustomList(this, ParseJson.id,ParseJson.mensaje,ParseJson.timestamp, ParseJson.isRead, ParseJson.userId, ParseJson.picture);
         // CustomList cls = new CustomList(this, ParseJson.timestamp);
         listView.setAdapter(cl);
 
@@ -312,7 +357,7 @@ public class NotificationsList extends AppCompatActivity {
 
         RequestQueue queue = Volley.newRequestQueue(this);
         //String url = "http://suterm.comli.com/regID.php";
-        String url = "http://suterm.eu5.org/updateSessionStatus.php";
+        String url = "http://www.entuizer.tech/administrators/suterm/webServices/updateSessionStatus.php";
         StringRequest putRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>()
                 {
@@ -392,7 +437,7 @@ public class NotificationsList extends AppCompatActivity {
 
         RequestQueue queue = Volley.newRequestQueue(this);
         //String url = "http://suterm.comli.com/regID.php";
-        String url = "http://suterm.eu5.org/updateDeviceStatus.php";
+        String url = "http://www.entuizer.tech/administrators/suterm/webServices/updateDeviceStatus.php";
         StringRequest putRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>()
                 {

@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url = "http://suterm.eu5.org/validateLoginApp.php";
+        String url = "http://www.entuizer.tech/administrators/suterm/webServices/validateLoginApp.php";
         StringRequest putRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>()
                 {

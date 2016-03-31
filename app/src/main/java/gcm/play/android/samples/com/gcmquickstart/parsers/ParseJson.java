@@ -17,6 +17,7 @@ public class ParseJson {
     public static String[] timestamp;
     public static int[] isRead;
     public static int[] userId;
+    public static String[] picture;
 
     public static final String JSON_ARRAY = "result";
     public static final String KEY_ID = "id";
@@ -24,6 +25,7 @@ public class ParseJson {
     public static final String KEY_EMAIL = "timestamp";
     public static final String KEY_IS_READ = "isRead";
     public static final String KEY_USER_ID = "userId";
+    public static final String KEY_PICTURE = "picture";
 
     private JSONArray users = null;
 
@@ -44,6 +46,7 @@ public class ParseJson {
             timestamp = new String[users.length()];
             isRead = new int[users.length()];
             userId = new int[users.length()];
+            picture = new String[users.length()];
 
             for(int i=0;i<users.length();i++){
                 JSONObject jo = users.getJSONObject(i);
@@ -52,6 +55,7 @@ public class ParseJson {
                 timestamp[i] = jo.getString(KEY_EMAIL);
                 isRead[i] = jo.getInt(KEY_IS_READ);
                 userId[i] = jo.getInt(KEY_USER_ID);
+                picture[i] = jo.getString(KEY_PICTURE);
             }
         } catch (JSONException e) {
             e.printStackTrace();
