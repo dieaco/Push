@@ -13,11 +13,13 @@
         android:weightSum="100">
 
         <LinearLayout
+            android:id="@+id/llImageViewPictures"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:layout_weight="40"
-            android:gravity="center">
+            android:gravity="center"
+            android:layout_marginRight="5dp">
 
             <ImageView
                 android:id="@+id/ivPicture"
@@ -29,10 +31,11 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/llMessage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:layout_weight="20">
+            android:layout_weight="18">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -64,10 +67,11 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/llStatus"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:layout_weight="40"
+            android:layout_weight="42"
             android:gravity="center">
 
             <ImageView

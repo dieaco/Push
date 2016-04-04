@@ -17,7 +17,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -35,20 +34,21 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import gcm.play.android.samples.com.gcmquickstart.adapters.CustomList;
+import gcm.play.android.samples.com.gcmquickstart.adapters.MessageAdapter;
 import gcm.play.android.samples.com.gcmquickstart.data.UserData;
-import gcm.play.android.samples.com.gcmquickstart.parsers.ParseJson;
+import gcm.play.android.samples.com.gcmquickstart.images.ImagesUtil;
+import gcm.play.android.samples.com.gcmquickstart.models.Message;
 import gcm.play.android.samples.com.gcmquickstart.views.RoundedImageView;
+import gcm.play.android.samples.com.gcmquickstart.webservices.GetMessages;
 
 public class NotificationsList extends AppCompatActivity {
 
-    private ImageView btnGet;
     private ListView listView;
     private ProgressDialog progressDialog;
-    private TextView tvSlogan;
 
     private Spinner spinner;
     private String[] messages_to_show = {"Mostrar 10", "Mostrar 25", "Mostrar 50", "Mostrar 100"};
@@ -69,14 +69,6 @@ public class NotificationsList extends AppCompatActivity {
         actionBar.setDisplayUseLogoEnabled(true);
 
         setContentView(R.layout.activity_notifications_list);
-
-        /* PASO DEL MENSAJE DE LA NOTIFICACIÓN ATRAVES DE BUNDLE PARA MOSTRAR UN TOAST */
-        Bundle extras = getIntent().getExtras();
-        if(extras != null){
-            String mensaje = extras.getString("message");
-            //Toast.makeText(this, "Mensaje: "+mensaje, Toast.LENGTH_LONG).show();
-        }
-        /* TERMINA MENSAJE DE LA NOTIFICACIÓN PARA MOSTRAR TOAST */
         initViews();
 
 
@@ -107,13 +99,16 @@ public class NotificationsList extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 TextView vId = (TextView) view.findViewById(R.id.textViewId);
                 TextView vMessage = (TextView) view.findViewById(R.id.textViewName);
+                ImageView imageViewPicture = (ImageView) view.findViewById(R.id.ivPicture);
+                ImageView imageViewStatus = (ImageView) view.findViewById(R.id.ivIsRead);
 
                 String messageId = vId.getText().toString();
                 String message = vMessage.getText().toString();
+                String imageViewTag = imageViewPicture.getTag().toString();
 
                 Log.d("ID_ITEM: ", vId.getText().toString() + " - MESSAGE: " + vMessage.getText().toString());
 
-                updateMessageStatus(messageId, message);
+                updateMessageStatus(messageId, message, imageViewTag, imageViewStatus);
 
             }
         });
@@ -123,7 +118,7 @@ public class NotificationsList extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 TextView vId = (TextView) view.findViewById(R.id.textViewId);
                 String messageId = vId.getText().toString();
-                Toast.makeText(NotificationsList.this,"Item:"+messageId, Toast.LENGTH_LONG).show();
+                Toast.makeText(NotificationsList.this, "Item:" + messageId, Toast.LENGTH_LONG).show();
                 return true;
             }
         });
@@ -136,7 +131,7 @@ public class NotificationsList extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
-                switch(position){
+                switch (position) {
                     case 0:
                         quantity_to_show = "10";
                         break;
@@ -166,7 +161,7 @@ public class NotificationsList extends AppCompatActivity {
     }
 
     //Actualización o inserción en el servidor del status de cada notificación
-    public void updateMessageStatus(final String messageId, final String message){
+    public void updateMessageStatus(final String messageId, final String message, final String imageView, final ImageView imageViewStatus){
         progressDialog.setTitle("Aviso");
         progressDialog.setMessage("Actualizando...");
         progressDialog.show();
@@ -190,7 +185,7 @@ public class NotificationsList extends AppCompatActivity {
 
                             Log.d("ERROR", ""+ERROR);
 
-                            messageConfirmation(messageId, message).show();
+                            messageConfirmation(messageId, message, imageView, imageViewStatus).show();
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -230,16 +225,25 @@ public class NotificationsList extends AppCompatActivity {
     }
 
     //Dialogo de confirmación
-    public AlertDialog messageConfirmation(String messageId, String message){
+    public AlertDialog messageConfirmation(String messageId, String message, String imageView, final ImageView imageViewStatus){
+        ImageView image = null;
+        if(image == null){
+            image =  new ImageView(this);
+        }
+        Bitmap bitmap = ImagesUtil.getBitmapImage(this, imageView);
+        image.setImageBitmap(bitmap);
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.MyTheme)
                 .setTitle("SUTERM")
                 .setMessage("# MENSAJE: "+messageId+" - TEXTO: "+message)
                 .setCancelable(true)
+                .setView(image)
                 .setPositiveButton("Listo", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         //Actualización del listado una vez que se presiona el botón Listo
-                        sendRequest(quantity_to_show);
+                        //sendRequest(quantity_to_show);
+                        imageViewStatus.setImageResource(R.drawable.ic_whatsapp_checked);
+                        dialog.dismiss();
                     }
                 });
 
@@ -249,17 +253,26 @@ public class NotificationsList extends AppCompatActivity {
     //Consulta de Notificaciones a la BD
     private void sendRequest(final String limit){
         RequestQueue queue = Volley.newRequestQueue(this);
-        //String url = "http://suterm.comli.com/regID.php";
         String url = "http://www.entuizer.tech/administrators/suterm/webServices/getMessages.php";
+        queue.getCache().remove(url);
         StringRequest putRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>()
                 {
 
                     public void onResponse(String response) {
-                        progressDialog.dismiss();
                         // response
                         Log.d("Response", response);
-                        showJSON(response);
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+                            GetMessages getMessages = new GetMessages(getApplicationContext());
+                            ArrayList<Message> listMessages = getMessages.getMessages(jsonObject);
+                            MessageAdapter messageAdapter = new MessageAdapter(getApplicationContext(), listMessages);
+                            listView.setAdapter(messageAdapter);
+                            progressDialog.dismiss();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
                     }
                 },
                 new Response.ErrorListener()
@@ -289,18 +302,6 @@ public class NotificationsList extends AppCompatActivity {
         };
 
         queue.add(putRequest);
-    }
-
-    //Parsea los datos que vienen de la base para adaptarlos al ListView
-    public void showJSON(String json){
-        /*int userIdLocal = UserData.getUserId(getApplicationContext());
-        Toast.makeText(getApplicationContext(),"UserIDLocal: "+userIdLocal,Toast.LENGTH_LONG).show();*/
-        ParseJson pj = new ParseJson(json);
-        pj.parseJSON();
-        CustomList cl = new CustomList(this, ParseJson.id,ParseJson.mensaje,ParseJson.timestamp, ParseJson.isRead, ParseJson.userId, ParseJson.picture);
-        // CustomList cls = new CustomList(this, ParseJson.timestamp);
-        listView.setAdapter(cl);
-
     }
 
     @Override

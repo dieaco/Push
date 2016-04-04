@@ -9,6 +9,7 @@
 
     <!-- [END gcm_permission] -->
     <application
+        android:largeHeap="true"
         android:allowBackup="true"
         android:icon="@drawable/logo"
         android:label="@string/app_name"
@@ -16,7 +17,7 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/mainActivity"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
 
         <!-- [START gcm_receiver] -->
         <receiver
@@ -66,9 +67,7 @@
         <activity
             android:name=".NotificationsList"
             android:label="@string/hearLeader"
-            android:screenOrientation="portrait">
-
-        </activity>
+            android:screenOrientation="portrait"></activity>
     </application>
 
 </manifest>
