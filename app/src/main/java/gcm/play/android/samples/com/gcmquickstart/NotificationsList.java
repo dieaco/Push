@@ -242,7 +242,7 @@ public class NotificationsList extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         //Actualización del listado una vez que se presiona el botón Listo
                         //sendRequest(quantity_to_show);
-                        imageViewStatus.setImageResource(R.drawable.ic_whatsapp_checked);
+                        imageViewStatus.setImageResource(R.drawable.bullet);
                         dialog.dismiss();
                     }
                 });

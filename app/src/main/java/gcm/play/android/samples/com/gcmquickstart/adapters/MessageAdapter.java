@@ -100,9 +100,9 @@ public class MessageAdapter extends BaseAdapter {
 
         //Asigna status correspondiente para cada notificación dependiendo del usuario del dispositivo
         if(isReadFromServer == 1){
-            imageViewIsRead.setImageResource(R.drawable.ic_whatsapp_checked);
+            imageViewIsRead.setImageResource(R.drawable.bullet);
         }else{
-            imageViewIsRead.setImageResource(R.drawable.ic_whatsapp_received);
+            imageViewIsRead.setImageResource(R.drawable.bullet_gray);
         }
 
         return view;
